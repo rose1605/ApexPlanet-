@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mini E-Commerce Store</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f8f8f8;
+    }
+
+    header {
+      background: #333;
+      color: white;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.5em;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    .products, .cart-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .product, .cart-item {
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      width: 200px;
+      flex: 1 1 200px;
+    }
+
+    img {
+      width: 100%;
+      border-radius: 5px;
+      object-fit: cover;
+    }
+
+    .filters {
+      margin: 20px 0;
+    }
+
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🛒 MyShop</h1>
+    <span>Total Items in Cart: <strong id="cartCount">0</strong></span>
+  </header>
+
+  <div class="container">
+    <div class="filters">
+      <label>Sort by:
+        <select id="sortBy" onchange="renderProducts()">
+          <option value="name">Name</option>
+          <option value="priceLow">Price (Low to High)</option>
+          <option value="priceHigh">Price (High to Low)</option>
+        </select>
+      </label>
+    </div>
+
+    <h2>Products</h2>
+    <div class="products" id="productList"></div>
+
+    <h2>Cart</h2>
+    <div class="cart-items" id="cartList"></div>
+  </div>
+
+  <script>
+    // --- Data ---
+    const products = [
+      { id: 1, name: "Wireless Mouse", price: 499, image: "C:/Users/Dell/Pictures/Saved Pictures/mouse.jpg" },
+      { id: 2, name: "Headphones", price: 999, image: "C:/Users/Dell/Pictures/Saved Pictures/headphones.jpg" },
+      { id: 3, name: "Keyboard", price: 799, image: "C:/Users/Dell/Pictures/Saved Pictures/keyboard.jpeg" },
+      { id: 4, name: "USB Hub", price: 299, image: "C:/Users/Dell/Pictures/Saved Pictures/Usb hub.webp" }
+    ];
+
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+    // --- Render Products ---
+    function renderProducts() {
+      const container = document.getElementById("productList");
+      container.innerHTML = "";
+      let sortedProducts = [...products];
+
+      const sortBy = document.getElementById("sortBy").value;
+      if (sortBy === "priceLow") sortedProducts.sort((a, b) => a.price - b.price);
+      if (sortBy === "priceHigh") sortedProducts.sort((a, b) => b.price - a.price);
+      if (sortBy === "name") sortedProducts.sort((a, b) => a.name.localeCompare(b.name));
+
+      sortedProducts.forEach(p => {
+        const div = document.createElement("div");
+        div.className = "product";
+        div.innerHTML = `
+          <img src="${p.image}" alt="${p.name}" loading="lazy">
+          <h3>${p.name}</h3>
+          <p>₹${p.price}</p>
+          <button onclick="addToCart(${p.id})">Add to Cart</button>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // --- Add to Cart ---
+    function addToCart(id) {
+      const item = cart.find(p => p.id === id);
+      if (item) {
+        item.qty += 1;
+      } else {
+        const product = products.find(p => p.id === id);
+        cart.push({ ...product, qty: 1 });
+      }
+      localStorage.setItem("cart", JSON.stringify(cart));
+      updateCart();
+    }
+
+    // --- Update Cart ---
+    function updateCart() {
+      const container = document.getElementById("cartList");
+      const countDisplay = document.getElementById("cartCount");
+      container.innerHTML = "";
+      let count = 0;
+
+      cart.forEach(p => {
+        count += p.qty;
+        const div = document.createElement("div");
+        div.className = "cart-item";
+        div.innerHTML = `
+          <strong>${p.name}</strong><br>
+          Quantity: ${p.qty}<br>
+          <button onclick="removeFromCart(${p.id})">Remove</button>
+        `;
+        container.appendChild(div);
+      });
+
+      countDisplay.innerText = count;
+    }
+
+    // --- Remove from Cart ---
+    function removeFromCart(id) {
+      cart = cart.filter(p => p.id !== id);
+      localStorage.setItem("cart", JSON.stringify(cart));
+      updateCart();
+    }
+
+    // INIT
+    renderProducts();
+    updateCart();
+  </script>
+</body>
+</html>
